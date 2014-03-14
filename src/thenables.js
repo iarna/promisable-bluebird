@@ -24,7 +24,7 @@ function Promise$_Cast(obj, originalPromise) {
         }
         //Make casting from another bluebird fast
         else if (isAnyBluebirdPromise(obj)) {
-            var ret = new Promise(INTERNAL);
+            var ret = Promise(INTERNAL);
             ret._setTrace(void 0);
             obj._then(
                 ret._fulfillUnchecked,
@@ -92,7 +92,7 @@ function Promise$_doThenable(x, then, originalPromise) {
             resolver.promise._reject(e, void 0);
             return;
         }
-        resolver.resolve(y);
+        resolver.fulfill(y);
     }
 
     function Promise$_rejectFromThenable(r) {

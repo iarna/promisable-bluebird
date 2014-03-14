@@ -164,7 +164,6 @@ function toFastProperties(obj) {
 
 var ret = {
     thrower: thrower,
-    isArray: es5.isArray,
     haveGetters: haveGetters,
     notEnumerableProp: notEnumerableProp,
     isPrimitive: isPrimitive,

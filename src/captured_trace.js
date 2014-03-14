@@ -71,14 +71,7 @@ function CapturedTrace$PossiblyUnhandledRejection(reason) {
         else {
             message = "Possibly unhandled " + String(reason);
         }
-        if (typeof console.error === "function" ||
-            typeof console.error === "object") {
-            console.error(message);
-        }
-        else if (typeof console.log === "function" ||
-            typeof console.log === "object") {
-            console.log(message);
-        }
+        throw new Error(message);
     }
 };
 

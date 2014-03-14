@@ -46,79 +46,14 @@ module.exports = function( grunt ) {
     }
 
 
-    var optionalModuleDependencyMap = {
-        "timers.js": ['Promise', 'INTERNAL'],
-        "any.js": ['Promise', 'Promise$_CreatePromiseArray', 'PromiseArray'],
-        "race.js": ['Promise', 'INTERNAL'],
-        "call_get.js": ['Promise'],
-        "filter.js": ['Promise', 'Promise$_CreatePromiseArray', 'PromiseArray', 'apiRejection'],
-        "generators.js": ['Promise', 'apiRejection', 'INTERNAL'],
-        "map.js": ['Promise', 'PromiseArray', 'INTERNAL', 'apiRejection'],
-        "nodeify.js": ['Promise'],
-        "promisify.js": ['Promise', 'INTERNAL'],
-        "props.js": ['Promise', 'PromiseArray'],
-        "reduce.js": ['Promise', 'Promise$_CreatePromiseArray', 'PromiseArray', 'apiRejection', 'INTERNAL'],
-        "settle.js": ['Promise', 'Promise$_CreatePromiseArray', 'PromiseArray'],
-        "some.js": ['Promise', 'Promise$_CreatePromiseArray', 'PromiseArray', 'apiRejection'],
-        "progress.js": ['Promise', 'isPromiseArrayProxy'],
-        "cancel.js": ['Promise', 'INTERNAL']
-
-    };
-
-    var optionalModuleRequireMap = {
-        "timers.js": true,
-        "race.js": true,
-        "any.js": true,
-        "call_get.js": true,
-        "filter.js": true,
-        "generators.js": true,
-        "map.js": true,
-        "nodeify.js": true,
-        "promisify.js": true,
-        "props.js": true,
-        "reduce.js": true,
-        "settle.js": true,
-        "some.js": true,
-        "progress.js": true,
-        "cancel.js": true
-
-    };
-
-    function getOptionalRequireCode( srcs ) {
-        return srcs.reduce(function(ret, cur, i){
-            if( optionalModuleRequireMap[cur] ) {
-                ret += "require('./"+cur+"')("+ optionalModuleDependencyMap[cur] +");\n";
-            }
-            return ret;
-        }, "") + "\nPromise.prototype = Promise.prototype;\nreturn Promise;\n";
-    }
-
     function getBrowserBuildHeader( sources ) {
         var header = "/**\n * bluebird build version " + gruntConfig.pkg.version + "\n";
         var enabledFeatures = ["core"];
-        var disabledFeatures = [];
-        featureLoop: for( var key in optionalModuleRequireMap ) {
-            for( var i = 0, len = sources.length; i < len; ++i ) {
-                var source = sources[i];
-                if( source.fileName === key ) {
-                    enabledFeatures.push( key.replace( ".js", "") );
-                    continue featureLoop;
-                }
-            }
-            disabledFeatures.push( key.replace( ".js", "") );
-        }
 
         header += ( " * Features enabled: " + enabledFeatures.join(", ") + "\n" );
 
-        if( disabledFeatures.length ) {
-            header += " * Features disabled: " + disabledFeatures.join(", ") + "\n";
-        }
         header += "*/\n";
         return header;
-    }
-
-    function applyOptionalRequires( src, optionalRequireCode ) {
-        return src.replace( /};([^}]*)$/, optionalRequireCode + "\n};$1");
     }
 
     var CONSTANTS_FILE = './src/constants.js';
@@ -257,36 +192,14 @@ module.exports = function( grunt ) {
                 src: [
                     "./src/finally.js",
                     "./src/direct_resolve.js",
-                    "./src/synchronous_inspection.js",
                     "./src/thenables.js",
-                    "./src/progress.js",
-                    "./src/cancel.js",
-                    "./src/any.js",
-                    "./src/race.js",
-                    "./src/call_get.js",
-                    "./src/filter.js",
-                    "./src/generators.js",
-                    "./src/map.js",
-                    "./src/nodeify.js",
-                    "./src/promisify.js",
-                    "./src/props.js",
-                    "./src/reduce.js",
-                    "./src/settle.js",
-                    "./src/some.js",
                     "./src/util.js",
                     "./src/schedule.js",
                     "./src/queue.js",
                     "./src/errors.js",
                     "./src/captured_trace.js",
                     "./src/async.js",
-                    "./src/catch_filter.js",
-                    "./src/promise.js",
-                    "./src/promise_array.js",
-                    "./src/settled_promise_array.js",
-                    "./src/some_promise_array.js",
-                    "./src/properties_promise_array.js",
-                    "./src/promise_resolver.js",
-                    "./src/promise_spawn.js"
+                    "./src/promise.js"
                 ]
             }
         }
@@ -306,20 +219,6 @@ module.exports = function( grunt ) {
     };
 
     gruntConfig.watch = {};
-
-    gruntConfig["saucelabs-mocha"] = {
-        all: {
-            options: {
-                urls: ["http://127.0.0.1:9999/index.html"],
-                tunnelTimeout: 5,
-                build: process.env.TRAVIS_JOB_ID,
-                concurrency: 3,
-                browsers: getBrowsers(),
-                testname: "mocha tests",
-                tags: ["master"]
-            }
-        }
-    };
 
     gruntConfig.bump = {
       options: {
@@ -344,46 +243,7 @@ module.exports = function( grunt ) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-concat');
 
-    function runIndependentTest( file, cb , env) {
-        var fs = require("fs");
-        var path = require("path");
-        var sys = require('sys');
-        var spawn = require('child_process').spawn;
-        var p = path.join(process.cwd(), "test");
-
-        var stdio = [
-            'ignore',
-            grunt.option("verbose")
-                ? process.stdout
-                : 'ignore',
-            process.stderr
-        ];
-        var flags = node11 ? ["--harmony-generators"] : [];
-        flags.push("--allow-natives-syntax");
-        if( file.indexOf( "mocha/") > -1 || file === "aplus.js" ) {
-            var node = spawn(typeof node11 === "string" ? node11 : 'node',
-                flags.concat(["../mocharun.js", file]),
-                {cwd: p, stdio: stdio, env: env});
-        }
-        else {
-            var node = spawn('node', flags.concat(["./"+file]),
-                             {cwd: p, stdio: stdio, env:env});
-        }
-        node.on('exit', exit );
-
-        function exit( code ) {
-            if( code !== 0 ) {
-                cb(new Error("process didn't exit normally. Code: " + code));
-            }
-            else {
-                cb(null);
-            }
-        }
-
-
-    }
-
-    function buildMain( sources, optionalRequireCode ) {
+    function buildMain( sources ) {
         var fs = require("fs");
         var Q = require("q");
         var root = cleanDirectory("./js/main/");
@@ -394,15 +254,12 @@ module.exports = function( grunt ) {
             src = astPasses.expandConstants( src, source.fileName );
             src = src.replace( /__DEBUG__/g, "false" );
             src = src.replace( /__BROWSER__/g, "false" );
-            if( source.fileName === "promise.js" ) {
-                src = applyOptionalRequires( src, optionalRequireCode );
-            }
             var path = root + source.fileName;
             return writeFileAsync(path, src);
         }));
     }
 
-    function buildDebug( sources, optionalRequireCode ) {
+    function buildDebug( sources ) {
         var fs = require("fs");
         var Q = require("q");
         var root = cleanDirectory("./js/debug/");
@@ -414,33 +271,10 @@ module.exports = function( grunt ) {
                 src = astPasses.expandConstants( src, source.fileName );
                 src = src.replace( /__DEBUG__/g, "true" );
                 src = src.replace( /__BROWSER__/g, "false" );
-                if( source.fileName === "promise.js" ) {
-                    src = applyOptionalRequires( src, optionalRequireCode );
-                }
                 var path = root + source.fileName;
                 return writeFileAsync(path, src);
             }));
         });
-    }
-
-    function buildZalgo( sources, optionalRequireCode ) {
-        var fs = require("fs");
-        var Q = require("q");
-        var root = cleanDirectory("./js/zalgo/");
-
-        return Q.all(sources.map(function( source ) {
-            var src = astPasses.removeAsserts( source.sourceCode, source.fileName );
-            src = astPasses.inlineExpansion( src, source.fileName );
-            src = astPasses.expandConstants( src, source.fileName );
-            src = astPasses.asyncConvert( src, "async", "invoke", source.fileName);
-            src = src.replace( /__DEBUG__/g, "false" );
-            src = src.replace( /__BROWSER__/g, "false" );
-            if( source.fileName === "promise.js" ) {
-                src = applyOptionalRequires( src, optionalRequireCode );
-            }
-            var path = root + source.fileName;
-            return writeFileAsync(path, src);
-        }));
     }
 
     function buildBrowser( sources ) {
@@ -473,32 +307,6 @@ module.exports = function( grunt ) {
         return dir;
     }
 
-    function getOptionalPathsFromOption( opt ) {
-        opt = (opt + "").toLowerCase().split(/\s+/g);
-        return optionalPaths.filter(function(v){
-            v = v.replace("./src/", "").replace( ".js", "" ).toLowerCase();
-            return opt.indexOf(v) > -1;
-        });
-    }
-
-    var optionalPaths = [
-        "./src/timers.js",
-        "./src/any.js",
-        "./src/race.js",
-        "./src/call_get.js",
-        "./src/filter.js",
-        "./src/generators.js",
-        "./src/map.js",
-        "./src/nodeify.js",
-        "./src/promisify.js",
-        "./src/props.js",
-        "./src/reduce.js",
-        "./src/settle.js",
-        "./src/some.js",
-        "./src/progress.js",
-        "./src/cancel.js"
-    ];
-
     var mandatoryPaths = [
         "./src/finally.js",
         "./src/es5.js",
@@ -510,18 +318,9 @@ module.exports = function( grunt ) {
         "./src/schedule.js",
         "./src/queue.js",
         "./src/errors.js",
-        "./src/errors_api_rejection.js",
         "./src/captured_trace.js",
         "./src/async.js",
-        "./src/catch_filter.js",
         "./src/promise.js",
-        "./src/promise_array.js",
-        "./src/settled_promise_array.js",
-        "./src/some_promise_array.js",
-        "./src/properties_promise_array.js",
-        "./src/synchronous_inspection.js",
-        "./src/promise_resolver.js",
-        "./src/promise_spawn.js",
         "./src/direct_resolve.js"
     ];
 
@@ -531,12 +330,8 @@ module.exports = function( grunt ) {
         var fs = require("fs");
         astPasses.readConstants(fs.readFileSync(CONSTANTS_FILE, "utf8"), CONSTANTS_FILE);
         if( !paths ) {
-            paths = optionalPaths.concat(mandatoryPaths);
+            paths = mandatoryPaths;
         }
-        var optionalRequireCode = getOptionalRequireCode(paths.map(function(v) {
-            return v.replace("./src/", "");
-        }));
-
         var Q = require("q");
 
         var promises = [];
@@ -562,109 +357,17 @@ module.exports = function( grunt ) {
             });
 
             if( isCI ) {
-                return buildDebug( sources, optionalRequireCode );
+                return buildDebug( sources );
             }
             else {
                 return Q.all([
-                    buildMain( sources, optionalRequireCode ).then( function() {
+                    buildMain( sources ).then( function() {
                         return buildBrowser( sources );
                     }),
-                    buildDebug( sources, optionalRequireCode ),
-                    buildZalgo( sources, optionalRequireCode )
+                    buildDebug( sources ),
                 ]);
             }
         });
-    }
-
-    String.prototype.contains = function String$contains( str ) {
-        return this.indexOf( str ) >= 0;
-    };
-
-    function isSlowTest( file ) {
-        return file.contains("2.3.3") ||
-            file.contains("bind") ||
-            file.contains("unhandled_rejections");
-    }
-
-    function testRun( testOption, jobs ) {
-        var fs = require("fs");
-        var path = require("path");
-        var done = this.async();
-
-        var totalTests = 0;
-        var testsDone = 0;
-        function testDone() {
-            testsDone++;
-            if( testsDone >= totalTests ) {
-                done();
-            }
-        }
-        var files;
-        if( testOption === "aplus" ) {
-            files = fs.readdirSync("test/mocha").filter(function(f){
-                return /^\d+\.\d+\.\d+/.test(f);
-            }).map(function( f ){
-                return "mocha/" + f;
-            });
-        }
-        else {
-            files = testOption === "all"
-                ? fs.readdirSync('test')
-                    .concat(fs.readdirSync('test/mocha')
-                        .map(function(fileName){
-                            return "mocha/" + fileName
-                        })
-                    )
-                : [testOption + ".js" ];
-
-
-            if( testOption !== "all" &&
-                !fs.existsSync( "./test/" + files[0] ) ) {
-                files[0] = "mocha/" + files[0];
-            }
-        }
-        files = files.filter(function(fileName){
-            if( !node11 && fileName.indexOf("generator") > -1 ) {
-                return false;
-            }
-            return /\.js$/.test(fileName);
-        }).map(function(f){
-            return f.replace( /(\d)(\d)(\d)/, "$1.$2.$3" );
-        });
-
-
-        var slowTests = files.filter(isSlowTest);
-        files = files.filter(function(file){
-            return !isSlowTest(file);
-        });
-
-        function runFile(file) {
-            totalTests++;
-            grunt.log.writeln("Running test " + file );
-            var env = undefined;
-            if (file.indexOf("bluebird-debug-env-flag") >= 0) {
-                env = Object.create(process.env);
-                env["BLUEBIRD_DEBUG"] = true;
-            }
-            runIndependentTest(file, function(err) {
-                if( err ) throw new Error(err + " " + file + " failed");
-                grunt.log.writeln("Test " + file + " succeeded");
-                testDone();
-                if( files.length > 0 ) {
-                    runFile( files.shift() );
-                }
-            }, env);
-        }
-
-        slowTests.forEach(runFile);
-
-        jobs = Math.min( files.length, jobs );
-        if (jobs === 1) {
-            grunt.option("verbose", true);
-        }
-        for( var i = 0; i < jobs; ++i ) {
-            runFile( files.shift() );
-        }
     }
 
     grunt.registerTask( "build", function() {
@@ -672,9 +375,6 @@ module.exports = function( grunt ) {
         var done = this.async();
         var features = grunt.option("features");
         var paths = null;
-        if( features ) {
-            paths = getOptionalPathsFromOption( features ).concat( mandatoryPaths );
-        }
 
         build( paths, isCI ).then(function() {
             done();
@@ -708,32 +408,6 @@ module.exports = function( grunt ) {
         }).done();
     });
 
-    grunt.registerTask( "testrun", function(){
-        var testOption = grunt.option("run");
-        var node11path = grunt.option("node11");
-        var jobs = parseInt(grunt.option("jobs"), 10);
-
-        if (!isFinite(jobs) || jobs < 1) {
-            jobs = 10;
-        }
-
-        if (typeof node11path === "string" && node11path) {
-            node11 = node11path;
-        }
-
-        if( !testOption ) testOption = "all";
-        else {
-            testOption = ("" + testOption);
-            testOption = testOption
-                .replace( /\.js$/, "" )
-                .replace( /[^a-zA-Z0-9_-]/g, "" );
-        }
-        testRun.call( this, testOption, jobs );
-    });
-
-    grunt.registerTask( "test", ["jshint", "build", "testrun"] );
-    grunt.registerTask( "test-browser", ["connect", "saucelabs-mocha"]);
     grunt.registerTask( "default", ["jshint", "build"] );
-    grunt.registerTask( "dev", ["connect", "watch"] );
 
 };
