@@ -48,7 +48,6 @@ var RangeError = global.RangeError;
 if (typeof RangeError !== "function") {
     RangeError = subError("RangeError", "range error");
 }
-var CancellationError = subError("CancellationError", "cancellation error");
 var TimeoutError = subError("TimeoutError", "timeout error");
 
 function RejectionError(message) {
@@ -73,7 +72,6 @@ var key = "__BluebirdErrorTypes__";
 var errorTypes = global[key];
 if (!errorTypes) {
     errorTypes = Objectfreeze({
-        CancellationError: CancellationError,
         TimeoutError: TimeoutError,
         RejectionError: RejectionError
     });
@@ -84,7 +82,6 @@ module.exports = {
     Error: Error,
     TypeError: TypeError,
     RangeError: RangeError,
-    CancellationError: errorTypes.CancellationError,
     RejectionError: errorTypes.RejectionError,
     TimeoutError: errorTypes.TimeoutError,
     originatesFromRejection: originatesFromRejection,

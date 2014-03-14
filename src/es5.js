@@ -8,8 +8,6 @@ if (isES5) {
         freeze: Object.freeze,
         defineProperty: Object.defineProperty,
         keys: Object.keys,
-        getPrototypeOf: Object.getPrototypeOf,
-        isArray: Array.isArray,
         isES5: isES5
     };
 }
@@ -38,30 +36,10 @@ else {
         return obj;
     }
 
-    var ObjectGetPrototypeOf = function ObjectGetPrototypeOf(obj) {
-        try {
-            return Object(obj).constructor.prototype;
-        }
-        catch (e) {
-            return proto;
-        }
-    }
-
-    var ArrayIsArray = function ArrayIsArray(obj) {
-        try {
-            return str.call(obj) === "[object Array]";
-        }
-        catch(e) {
-            return false;
-        }
-    }
-
     module.exports = {
-        isArray: ArrayIsArray,
         keys: ObjectKeys,
         defineProperty: ObjectDefineProperty,
         freeze: ObjectFreeze,
-        getPrototypeOf: ObjectGetPrototypeOf,
         isES5: isES5
     };
 }

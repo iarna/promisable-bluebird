@@ -27,3 +27,6 @@ changelog.js
 sauce_connect.log
 bump.js
 .DS_Store
+*~
+DEADJOE
+.#*

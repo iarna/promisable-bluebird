@@ -42,7 +42,6 @@ CONSTANT(IS_GC_QUEUED, 0xC0000000|0)
 CONSTANT(IS_FOLLOWING, 0x20000000|0);
 CONSTANT(IS_FULFILLED, 0x10000000|0);
 CONSTANT(IS_REJECTED, 0x8000000|0);
-CONSTANT(IS_CANCELLABLE, 0x4000000|0);
 CONSTANT(IS_FINAL, 0x2000000|0);
 CONSTANT(IS_BOUND, 0x800000|0);
 CONSTANT(IS_PROXIED, 0x400000|0);
@@ -80,14 +79,10 @@ CONSTANT(RETURN, 2);
 CONSTANT(MAX_PARAM_COUNT, 1023);
 CONSTANT(PARAM_COUNTS_TO_TRY, 5);
 
-//deprecated
-CONSTANT(OBJECT_PROMISIFY_DEPRECATED, "Promise.promisify for promisifying entire objects is deprecated. Use Promise.promisifyAll instead.");
-CONSTANT(SPAWN_DEPRECATED, "Promise.spawn is deprecated. Use Promise.coroutine instead.");
-
 //errors
 CONSTANT(CONSTRUCT_ERROR_ARG, "the promise constructor requires a resolver function");
 CONSTANT(UNBOUND_RESOLVER_INVOCATION, "Illegal invocation, resolver resolve/reject must be called within a resolver context. Consider using the promise constructor instead.");
-CONSTANT(CONSTRUCT_ERROR_INVOCATION, "the promise constructor cannot be invoked directly");
+CONSTANT(CONSTRUCT_ERROR_INVOCATION, "the promise constructor cannot be called as a constructor");
 CONSTANT(COLLECTION_ERROR,  "expecting an array, a promise or a thenable" );
 CONSTANT(NOT_GENERATOR_ERROR, "generatorFunction must be a function");
 CONSTANT(NOT_FUNCTION_ERROR, "fn must be a function");
@@ -99,4 +94,3 @@ CONSTANT(CIRCULAR_RESOLUTION_ERROR, "circular promise resolution chain");
 CONSTANT(PROPS_TYPE_ERROR, "cannot await properties of a non-object");
 CONSTANT(POSITIVE_INTEGER_ERROR, "expecting a positive integer");
 CONSTANT(TIMEOUT_ERROR, "operation timed out after");
-CONSTANT(YIELDED_NON_PROMISE_ERROR, "A value was yielded that could not be treated as a promise");
