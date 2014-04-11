@@ -1,7 +1,7 @@
 {
     "name": "promisable-bluebird",
     "description": "The excelllent bluebird promise module, hacked to behave like Promisables",
-    "version": "1.1.2",
+    "version": "1.4.0",
     "keywords": [
         "promise",
         "performance",
