@@ -1,7 +1,7 @@
 {
-    "name": "bluebird",
-    "description": "Full featured Promises/A+ implementation with exceptionally good performance",
-    "version": "1.2.4",
+    "name": "promisable-bluebird",
+    "description": "promisable-bluebird: The excelllent bluebird promise module, hacked to behave like Promisable",
+    "version": "1.4.3",
     "keywords": [
         "promise",
         "performance",
@@ -20,20 +20,15 @@
     "scripts": {
         "test": "grunt test"
     },
-    "homepage": "https://github.com/petkaantonov/bluebird",
+    "homepage": "https://github.com/iarna/promisable-bluebird",
     "repository": {
         "type": "git",
-        "url": "git://github.com/petkaantonov/bluebird.git"
+        "url": "git://github.com/iarna/promisable-bluebird.git"
     },
     "bugs": {
-        "url": "http://github.com/petkaantonov/bluebird/issues"
+        "url": "http://github.com/iarna/promisable-bluebird/issues"
     },
     "license": "MIT",
-    "author": {
-        "name": "Petka Antonov",
-        "email": "petka_antonov@hotmail.com",
-        "url": "http://github.com/petkaantonov/"
-    },
     "devDependencies": {
         "grunt": "~0.4.1",
         "grunt-contrib-jshint": "~0.6.4",
